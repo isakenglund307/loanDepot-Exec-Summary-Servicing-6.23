@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>loanDepot CI/AISA Servicing Status - Executive Summary</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a2d4d 0%, #2d4a7a 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            padding: 32px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e6ed;
+        }
+
+        .status-card-overview {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 4px solid #4a90e2;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .status-card-overview h3 {
+            font-size: 14px;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .badge.live {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .badge.ready {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .badge.awaiting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .badge.no-data {
+            background: #e9ecef;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+
+        .journey-section {
+            padding: 32px;
+            border-bottom: 1px solid #e0e6ed;
+        }
+
+        .journey-section:last-child {
+            border-bottom: none;
+        }
+
+        .journey-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .journey-header:hover {
+            opacity: 0.8;
+        }
+
+        .journey-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .journey-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a2d4d;
+        }
+
+        .journey-status {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .toggle-icon {
+            font-size: 20px;
+            transition: transform 0.3s ease;
+            color: #4a90e2;
+        }
+
+        .toggle-icon.expanded {
+            transform: rotate(180deg);
+        }
+
+        .journey-details {
+            display: none;
+            margin-top: 24px;
+            animation: slideDown 0.3s ease;
+        }
+
+        .journey-details.expanded {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .detail-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 3px solid #4a90e2;
+        }
+
+        .detail-section h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-content {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #495057;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .detail-content.collapsed {
+            max-height: 80px;
+            overflow: hidden;
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .detail-content.collapsed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(to bottom, transparent, #f8f9fa);
+        }
+
+        .expand-text {
+            display: inline-block;
+            margin-top: 8px;
+            color: #4a90e2;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .expand-text:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 32px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+            border-top: 1px solid #e0e6ed;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 24px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .journey-section {
+                padding: 20px;
+            }
+
+            .journey-details.expanded {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>loanDepot CI/AISA Servicing</h1>
+            <p>Executive Status Summary | As of June 23, 2026</p>
+        </div>
+
+        <div class="status-grid">
+            <div class="status-card-overview">
+                <h3>Equity/Heloc</h3>
+                <div class="status-badges">
+                    <span class="badge live">AI Voice: Live</span>
+                    <span class="badge live">AI SMS: Live</span>
+                    <span class="badge awaiting">Email: Awaiting</span>
+                </div>
+            </div>
+
+            <div class="status-card-overview">
+                <h3>Rate</h3>
+                <div class="status-badges">
+                    <span class="badge ready">AI Voice: Ready</span>
+                    <span class="badge ready">AI SMS: Ready</span>
+                    <span class="badge ready">Email: Ready</span>
+                </div>
+            </div>
+
+            <div class="status-card-overview">
+                <h3>PMR</h3>
+                <div class="status-badges">
+                    <span class="badge ready">AI Voice: Ready</span>
+                    <span class="badge ready">AI SMS: Ready</span>
+                    <span class="badge no-data">Email: None</span>
+                </div>
+            </div>
+
+            <div class="status-card-overview">
+                <h3>Credit</h3>
+                <div class="status-badges">
+                    <span class="badge ready">AI Voice: Ready</span>
+                    <span class="badge ready">AI SMS: Ready</span>
+                    <span class="badge ready">Email: Ready</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- EQUITY/HELOC -->
+        <div class="journey-section">
+            <div class="journey-header" onclick="toggleJourney(this)">
+                <div class="journey-title">
+                    <span class="journey-name">📊 Equity/Heloc</span>
+                    <div class="journey-status">
+                        <span class="badge live">Live</span>
+                        <span class="badge live">Live</span>
+                        <span class="badge awaiting">Awaiting LD Approval</span>
+                    </div>
+                </div>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="journey-details">
+                <div class="detail-section">
+                    <h4>Email Campaign</h4>
+                    <div class="detail-content">Awaiting LD approval: 4 email series</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RATE -->
+        <div class="journey-section">
+            <div class="journey-header" onclick="toggleJourney(this)">
+                <div class="journey-title">
+                    <span class="journey-name">📈 Rate</span>
+                    <div class="journey-status">
+                        <span class="badge ready">Ready to Launch</span>
+                        <span class="badge ready">Ready to Launch</span>
+                        <span class="badge ready">Ready to Launch</span>
+                    </div>
+                </div>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="journey-details">
+                <div class="detail-section">
+                    <h4>Email Campaign</h4>
+                    <div class="detail-content">Ready for launch: 3 email paths for VA IRRL, FHA, Conventional</div>
+                </div>
+                <div class="detail-section">
+                    <h4>Talk Track</h4>
+                    <div class="detail-content collapsed" id="rate-talk">Agent: Hi [first name], this is Laura from Loan Depot, [an AI if required] on a recorded line. How are you doing today?
+
+[Borrower Response]
+
+Agent: [responds dynamically to borrower] So, I'm an assistant for the associates at loanDepot. We did the loan for your home in [property city]. I'm reaching out because rates have dropped recently and there's a good chance we could lower your monthly payment or even help you take some cash out. Would you be interested in exploring your options?
+
+[Borrower Response]
+
+Agent: [responds dynamically to borrower] Great, have there been any changes since we did your loan?
+
+[Borrower Response]
+
+Agent: [responds dynamically to borrower] Great, let me quickly see if an associate for loanDepot can hop on the call right now. They should be here in just a sec.
+
+[Agent makes small talk until associate joins]</div>
+                    <span class="expand-text" onclick="toggleExpand(this)">Read more ↓</span>
+                </div>
+                <div class="detail-section">
+                    <h4>SMS Track</h4>
+                    <div class="detail-content">Hey NAME, this is Laura from loanDepot, we did the loan for your home in LOCATION. Just tried to get a hold of you over the phone because we were reviewing your file, and based on where the market is right now, it looks like we may be able to lower your monthly payment or even help you take some cash out. Are you free to chat now?</div>
+                </div>
+                <div class="detail-section">
+                    <h4>Cadence</h4>
+                    <div class="detail-content">17 total calls over 14 days
+Initial double dial
+Day 0: 2 calls, 2 SMS
+Day 1: 2 calls
+Day 2: 2 calls, 1 SMS
+Day 3, 4, 5, 6, 7, 8, 9: 1 call
+Day 10: 1 call, 1 SMS
+Day 11, 12, 13: 1 call</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PMR -->
+        <div class="journey-section">
+            <div class="journey-header" onclick="toggleJourney(this)">
+                <div class="journey-title">
+                    <span class="journey-name">🔄 PMR</span>
+                    <div class="journey-status">
+                        <span class="badge ready">Ready to Launch</span>
+                        <span class="badge ready">Ready to Launch</span>
+                        <span class="badge no-data">No Email</span>
+                    </div>
+                </div>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="journey-details">
+                <div class="detail-section">
+                    <h4>Email Campaign</h4>
+                    <div class="detail-content">No email series currently</div>
+                </div>
+                <div class="detail-section">
+                    <h4>Talk Track</h4>
+                    <div class="detail-content collapsed" id="pmr-talk">Agent: Hi [first name], this is Laura from Loan Depot, [an AI if required] on a recorded line. We did the mortgage for your home in [property city]. How are you doing today?
+
+[Borrower Response]
+
+Agent: [responds dynamically to borrower] I'm an assistant for the associates at loanDepot. We wanted to check in on how things are going with your mortgage and get a call scheduled for a mortgage review. Could we quickly run through a few questions together to see if there are any ways we could potentially lower your monthly payments or take advantage of other opportunities?
+
+[Borrower Response]
+
+Agent: [responds dynamically to borrower] Awesome! So, any life changes for you recently, like a new job or are you planning any home renovations?
+
+[Borrower Response]
+
+Agent: [responds dynamically to borrower] Great, let me quickly see if an associate for loanDepot can hop on the call right now. They should be here in just a sec.
+
+[Agent makes small talk until associate joins]
+
+Agent: Great, so I have an associate on the call now to walk you through your options. [first name] is [summary of goal / conversation]. I'll let you guys take it from here.</div>
+                    <span class="expand-text" onclick="toggleExpand(this)">Read more ↓</span>
+                </div>
+                <div class="detail-section">
+                    <h4>SMS Track</h4>
+                    <div class="detail-content">Hey NAME, this is Laura from loanDepot. Just tried to get a hold of you over the phone. We did the loan for your home in LOCATION and I had a few questions about how things are going with your mortgage and your monthly payment. Are you free to chat now?</div>
+                </div>
+                <div class="detail-section">
+                    <h4>Cadence</h4>
+                    <div class="detail-content">6 total calls over 12 days
+Day 1: 1 call, 1 SMS
+Day 3: 1 call
+Day 6: 1 call, 1 SMS
+Day 9: 1 call
+Day 11, 12: 1 call</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CREDIT -->
+        <div class="journey-section">
+            <div class="journey-header" onclick="toggleJourney(this)">
+                <div class="journey-title">
+                    <span class="journey-name">💳 Credit</span>
+                    <div class="journey-status">
+                        <span class="badge ready">Ready to Launch</span>
+                        <span class="badge ready">Ready to Launch</span>
+                        <span class="badge ready">Ready to Launch</span>
+                    </div>
+                </div>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="journey-details">
+                <div class="detail-section">
+                    <h4>Email Campaign</h4>
+                    <div class="detail-content">Ready to launch: 4 email series</div>
+                </div>
+                <div class="detail-section">
+                    <h4>Talk Track</h4>
+                    <div class="detail-content collapsed" id="credit-talk">Agent: Hi [first name], this is Laura from Loan Depot, [an AI if required] on a recorded line. How are you doing today?
+
+[Borrower Response]
+
+Agent: [responds dynamically to borrower] So I'm an assistant for the associates at loanDepot, we did the loan for your home in [property city]. I'm reaching out because it seems like you are in the market for a new home or to refinance and I wanted to see if you'd be interested in seeing what options we can pull together for you?
+
+[Borrower Response]
+
+Agent: [responds dynamically to borrower] So are you looking for refinancing options or to purchase a new home?
+
+[Borrower Response]
+
+Agent: [responds dynamically to borrower] Great, let me quickly see if an associate for LoanDepot can hop on the call right now. They should be here in just a sec.
+
+[Agent makes small talk until associate joins]
+
+Agent: Great, so I have an associate on the call now to walk you through your options. [first name] is [summary of goal / conversation]. I'll let you guys take it from here.</div>
+                    <span class="expand-text" onclick="toggleExpand(this)">Read more ↓</span>
+                </div>
+                <div class="detail-section">
+                    <h4>SMS Track</h4>
+                    <div class="detail-content">Hey NAME, this is Laura from loanDepot. Just tried to get a hold of you over the phone. We did the loan for your home in LOCATION and I'm reaching out because it seems like you're in the market for a new home or a refi. I wanted to hop on a call to see what options we can pull together for you. Are you free to chat now?</div>
+                </div>
+                <div class="detail-section">
+                    <h4>Cadence</h4>
+                    <div class="detail-content">12 total calls over 14 days
+First call triggered immediately
+Initial double dial
+Day 0: 3 calls, 2 SMS
+Day 1: 1 call
+Day 2: 1 call, 1 SMS
+Day 3: 1 call
+Day 4: 1 call, 1 SMS
+Day 7: 2 calls
+Day 10, 11, 13: 1 call</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Status Summary: 1 Live • 3 Ready to Launch • 1 Awaiting LD Approval | Last Updated: June 23, 2026</p>
+        </div>
+    </div>
+
+    <script>
+        function toggleJourney(header) {
+            const details = header.nextElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            
+            details.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
+        }
+
+        function toggleExpand(element) {
+            const content = element.previousElementSibling;
+            const isExpanded = content.classList.contains('collapsed');
+            
+            if (isExpanded) {
+                content.classList.remove('collapsed');
+                element.textContent = 'Read less ↑';
+            } else {
+                content.classList.add('collapsed');
+                element.textContent = 'Read more ↓';
+            }
+        }
+    </script>
+</body>
+</html>
